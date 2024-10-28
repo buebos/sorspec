@@ -1,0 +1,16 @@
+name: sampleness
+
+database:
+  system: postgres@latest
+server:
+  language: typescript@latest
+  platform: express@latest
+  orm: prisma@latest
+client:
+  browser:
+    rendering: ssr
+    language: typescript@latest
+    platform: react@latest
+  mobile:
+    language: typescript@latest
+    platform: nativescript@latest

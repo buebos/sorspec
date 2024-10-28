@@ -1,0 +1,11 @@
+method: JWT
+config:
+  strategy: refresh
+  signature:
+    location: .env
+    key: AUTH_JWT_SIGN_KEY
+encryption:
+  algorithm: sha-256
+  pepper:
+    location: .env
+    symbol: AUTH_CRYPT_KEY_PEPPER

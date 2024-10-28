@@ -1,0 +1,5 @@
+groups:
+  enabled: true
+data:
+  migration:
+    directory: database/migration

@@ -1,0 +1,30 @@
+app:
+  name: sampleness
+
+  database:
+    system: postgres@latest
+  server:
+    language: typescript@latest
+    platform: express@latest
+    orm: prisma@latest
+  client:
+    browser:
+      rendering: ssr
+      language: typescript@latest
+      platform: react@latest
+    mobile:
+      language: typescript@latest
+      platform: nativescript@latest
+
+  authentication:
+    method: JWT
+    config:
+      strategy: refresh
+      signature:
+        location: .env
+        key: AUTH_JWT_SIGN_KEY
+    encryption:
+      algorithm: sha-256
+      pepper:
+        location: .env
+        symbol: AUTH_CRYPT_KEY_PEPPER
