@@ -35,7 +35,7 @@ var config Config = Config{
 				return os.Create(filepath.Join(dir, base+".yaml"))
 			},
 			"dir": func(dir string) (*os.File, error) {
-				os.MkdirAll(filepath.Join(dir, base, "requirement"), os.ModeDir)
+				os.MkdirAll(filepath.Join(dir, base, "requirement"), os.ModePerm)
 				return os.Create(filepath.Join(dir, base, "app.yaml"))
 			},
 		},
@@ -50,9 +50,14 @@ var initialize = &cobra.Command{
 		dir := args[0]
 		mode, _ := cmd.Flags().GetString("mode")
 
-		os.MkdirAll(dir, os.ModeDir)
+		os.MkdirAll(dir, os.ModePerm)
 
-		configFile, _ := config.mode.options[mode](dir)
+		configFile, err := config.mode.options[mode](dir)
+
+		if err != nil {
+			fmt.Print(err)
+			return
+		}
 
 		configFileEnd, err := configFile.Write([]byte("app:\n\tname: " + filepath.Base(dir)))
 
