@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	Layer "github.com/gael-herrera/sorspec/layer"
 	"github.com/gael-herrera/sorspec/requirement"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +26,7 @@ type Config struct {
 Base scope name for project configuration. Could result in a file or a directory
 depending on the config mode.
 */
-const base string = "sorspec"
+const base = "sorspec"
 
 var config Config = Config{
 	mode: ConfigMode{
@@ -59,11 +60,25 @@ var initialize = &cobra.Command{
 			return
 		}
 
-		configFileEnd, err := configFile.Write([]byte("app:\n\tname: " + filepath.Base(dir)))
+		configFileCursor, err := configFile.Write([]byte(fmt.Sprintf("app:\n%sname: %s\n", tab(1), filepath.Base(dir))))
 
 		if err != nil {
 			fmt.Print(fmt.Errorf("could not write on %s", filepath.Join(dir, configFile.Name())))
+			fmt.Print(err)
 			return
+		}
+
+		for _, layer := range Layer.Layers {
+			core, _ := cmd.Flags().GetString(layer)
+
+			if core == "" {
+				continue
+			}
+
+			field := fmt.Sprintf("%s%s:\n%score: %s\n", tab(1), layer, tab(2), core)
+
+			count, _ := configFile.WriteAt([]byte(field), int64(configFileCursor))
+			configFileCursor += count
 		}
 
 		for i := 1; i < len(args); i++ {
@@ -77,9 +92,10 @@ var initialize = &cobra.Command{
 				return
 			}
 
-			reqConfig = fmt.Sprintf("\n\n" + req.Id + ":\n\t" + strings.ReplaceAll(reqConfig, "\n", "\n\t"))
+			reqConfig = fmt.Sprintf("\n%s:\n%s%s\n", req.Id, tab(1), strings.ReplaceAll(reqConfig, "\n", "\n"+tab(1)))
 
-			configFileEnd, _ = configFile.WriteAt([]byte(reqConfig), int64(configFileEnd))
+			count, _ := configFile.WriteAt([]byte(reqConfig), int64(configFileCursor))
+			configFileCursor += count
 		}
 
 		os.Create(filepath.Join(dir, ".gitignore"))
@@ -105,14 +121,24 @@ var initialize = &cobra.Command{
 			return fmt.Errorf("invalid mode: %s, available modes are: %s", mode, strings.Join(keys, ", "))
 		}
 
-		if err != nil {
-			return err
-		}
 		for i := 1; i < len(args); i++ {
 			req := requirement.Options[args[i]]
 
 			if req == nil {
 				return fmt.Errorf("no requirement named: '%s'", args[i])
+			}
+		}
+
+		for _, layer := range Layer.Layers {
+			core, _ := cmd.Flags().GetString(layer)
+
+			/* The flag has default value and was not set by the user */
+			if !cmd.Flag(layer).Changed {
+				continue
+			}
+
+			if Layer.GetCoreLatest(layer, core) == "" {
+				return fmt.Errorf("no core named: '%s' for layer %s", core, layer)
 			}
 		}
 
@@ -122,4 +148,20 @@ var initialize = &cobra.Command{
 
 func init() {
 	initialize.Flags().StringP("mode", "m", config.mode.fallback, "defines if sorspec config will be in a dir with multiple files or in a single file")
+
+	initialize.Flags().StringP("database", "d", "", "defines the system to use for the database")
+	initialize.Flags().StringP("server", "s", "", "defines the core in which to build the server")
+	initialize.Flags().StringP("browser", "b", "", "defines the framework in which to build the frontend")
+	initialize.Flags().StringP("android", "a", "", "defines the core to use for building the ios app")
+	initialize.Flags().StringP("ios", "i", "", "defines the core to use for building the ios app")
+}
+
+func tab(count int) string {
+	result := ""
+
+	for range count {
+		result += "  "
+	}
+
+	return result
 }
