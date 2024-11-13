@@ -17,7 +17,7 @@ type Requirement struct {
 
 var resourceDir string = filepath.Join("resource", "requirement")
 
-var Options map[string]*Requirement = map[string]*Requirement{
+var Requirements map[string]*Requirement = map[string]*Requirement{
 	"authentication": &authentication,
 	"authorization":  &authorization,
 }
